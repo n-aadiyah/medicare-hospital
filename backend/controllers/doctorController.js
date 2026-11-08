@@ -294,7 +294,44 @@ const getDoctorById = async (req, res) => {
     return sendError(res, 500, "Server error while fetching doctor.");
   }
 };
+// GET LOGGED-IN DOCTOR'S OWN PROFILE
+const getMyDoctorProfile = async (req, res) => {
+  try {
+    const doctor = await Doctor.findOne({
+      user: req.user._id
+    })
+      .populate("user", "name email phone profileImage")
+      .populate("specialization", "name");
 
+    if (!doctor || !doctor.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor profile not found."
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      profile: {
+        name: doctor.user.name || "",
+        email: doctor.user.email || "",
+        phone: doctor.user.phone || "",
+        profileImage: doctor.user.profileImage || "",
+        bio: doctor.bio || "",
+        specialization: doctor.specialization?.name || "",
+        experience: doctor.experience,
+        consultationFee: doctor.consultationFee
+      }
+    });
+  } catch (error) {
+    console.error("Get own doctor profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch doctor profile."
+    });
+  }
+};
 // UPDATE DOCTOR (ADMIN)
 const updateDoctor = async (req, res) => {
   let session;
@@ -634,4 +671,5 @@ module.exports = {
   updateDoctor,
   deactivateDoctor,
   updateMyDoctorProfile,
+  getMyDoctorProfile,
 };

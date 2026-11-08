@@ -3,18 +3,19 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import PatientDashboard from './pages/PatientDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
 function ProtectedRoute({ allowedRoles, children }) {
   const { user } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
 
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
+
   return children;
 }
 
@@ -26,14 +27,9 @@ function DashboardPlaceholder({ title }) {
       <div className="card p-4">
         <h2>{title}</h2>
         <p>Welcome, {user?.name}!</p>
-        <p>Your MediCare dashboard will be built next.</p>
         <button
           className="btn btn-primary-custom"
-          style={{ width: '120px' }}
-          onClick={() => {
-            logout();
-            window.location.href = '/login';
-          }}
+          onClick={logout}
         >
           Logout
         </button>
@@ -65,32 +61,32 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
 
-       <Route
-  path="/patient/dashboard"
-  element={
-    <ProtectedRoute allowedRoles={['patient']}>
-      <PatientDashboard />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/patient/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['patient']}>
+              <PatientDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/doctor/dashboard"
           element={
             <ProtectedRoute allowedRoles={['doctor']}>
-              <DashboardPlaceholder title="Doctor Dashboard" />
+              <DoctorDashboard />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <DashboardPlaceholder title="Admin Dashboard" />
-            </ProtectedRoute>
-          }
-        />
+       <Route
+  path="/admin/dashboard"
+  element={
+    <ProtectedRoute allowedRoles={['admin']}>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

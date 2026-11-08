@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { createDoctor ,getAllDoctors,getDoctorById,updateDoctor,deactivateDoctor,updateMyDoctorProfile,} = require("../controllers/doctorController");
+const { createDoctor ,getAllDoctors,getDoctorById,updateDoctor,deactivateDoctor,updateMyDoctorProfile,getMyDoctorProfile} = require("../controllers/doctorController");
 const { getPublicDoctors } = require("../controllers/doctorController");
 const {
   protect,
@@ -22,6 +22,12 @@ router.get(
   protect,
   authorizeRoles("admin"),
   getAllDoctors
+);
+router.get(
+  "/profile/me",
+  protect,
+  authorizeRoles("doctor"),
+  getMyDoctorProfile
 );
 // Doctor updates own profile
 router.put(
