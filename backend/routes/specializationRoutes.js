@@ -7,6 +7,7 @@ const {
   getAllSpecializations,
   updateSpecialization,
   deactivateSpecialization,
+  getPublicSpecializations,
 } = require("../controllers/specializationController");
 
 const {
@@ -14,6 +15,7 @@ const {
   authorizeRoles,
 } = require("../middleware/authMiddleware");
 
+router.get("/public", getPublicSpecializations);
 // Admin-only routes
 router.post(
   "/",
