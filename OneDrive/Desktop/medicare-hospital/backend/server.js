@@ -7,6 +7,10 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const specializationRoutes = require("./routes/specializationRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
+const availabilityRoutes = require("./routes/availabilityRoutes");
+const appointmentRoutes = require("./routes/appointmentRoutes");
+const prescriptionRoutes = require("./routes/prescriptionRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const app = express();
 
 // Middleware
@@ -31,6 +35,10 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/specializations", specializationRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/availability", availabilityRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/admin", adminRoutes);
 // Server configuration
 const PORT = process.env.PORT || 5000;
 
