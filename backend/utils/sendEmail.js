@@ -1,21 +1,31 @@
-const { Resend } = require("resend");
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async ({ to, subject, text }) => {
-  const { data, error } = await resend.emails.send({
-    from: "MediCare <onboarding@resend.dev>",
-    to,
-    subject,
-    text,
-  });
+  try {
+    const response = await fetch(process.env.GOOGLE_APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8",
+      },
+      body: JSON.stringify({
+        secret: process.env.GOOGLE_APPS_SCRIPT_SECRET,
+        to,
+        subject,
+        text,
+      }),
+    });
 
-  if (error) {
-    console.error("Resend email error:", error);
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error("Google Apps Script email error:", result);
+      throw new Error("Email could not be sent");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Email sending failed:", error.message);
     throw new Error("Email could not be sent");
   }
-
-  return data;
 };
 
 module.exports = sendEmail;
