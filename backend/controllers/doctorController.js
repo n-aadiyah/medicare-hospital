@@ -1,9 +1,14 @@
-
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
 const Doctor = require("../models/Doctor");
 const Specialization = require("../models/Specialization");
+
+const isValidEmail = (email) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const sendError = (res, status, message) =>
+  res.status(status).json({ success: false, message });
 
 // CREATE DOCTOR
 const createDoctor = async (req, res) => {
@@ -20,9 +25,9 @@ const createDoctor = async (req, res) => {
       experience,
       bio,
       consultationFee,
-    } = req.body;
+    } = req.body || {};
 
-    // Validate required fields and their types
+    // Required fields
     if (
       typeof name !== "string" ||
       typeof username !== "string" ||
@@ -33,62 +38,49 @@ const createDoctor = async (req, res) => {
       experience === null ||
       experience === ""
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide all required doctor details.",
-      });
+      return sendError(
+        res,
+        400,
+        "Please provide all required doctor details."
+      );
     }
 
-    // Normalize input
     const normalizedName = name.trim();
     const normalizedUsername = username.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (
-      !normalizedName ||
-      !normalizedUsername ||
-      !normalizedEmail
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, username and email cannot be empty.",
-      });
+    if (!normalizedName || !normalizedUsername || !normalizedEmail) {
+      return sendError(
+        res,
+        400,
+        "Name, username and email cannot be empty."
+      );
     }
 
-    // Validate password
     if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must contain at least 8 characters.",
-      });
+      return sendError(
+        res,
+        400,
+        "Password must contain at least 8 characters."
+      );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(normalizedEmail)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a valid email address.",
-      });
+    if (!isValidEmail(normalizedEmail)) {
+      return sendError(res, 400, "Please provide a valid email address.");
     }
 
-    // Validate experience
     const doctorExperience = Number(experience);
 
-    if (
-      !Number.isFinite(doctorExperience) ||
-      doctorExperience < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Experience must be a valid non-negative number.",
-      });
+    if (!Number.isFinite(doctorExperience) || doctorExperience < 0) {
+      return sendError(
+        res,
+        400,
+        "Experience must be a valid non-negative number."
+      );
     }
 
-    // Validate consultation fee
     const fee =
-      consultationFee === undefined
+      consultationFee === undefined || consultationFee === null
         ? 0
         : Number(consultationFee);
 
@@ -97,42 +89,34 @@ const createDoctor = async (req, res) => {
       !Number.isFinite(fee) ||
       fee < 0
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Consultation fee must be a valid non-negative number.",
-      });
+      return sendError(
+        res,
+        400,
+        "Consultation fee must be a valid non-negative number."
+      );
     }
 
-    // Validate optional fields
-    if (
-      phone !== undefined &&
-      typeof phone !== "string"
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone must be a string.",
-      });
+    if (phone !== undefined && typeof phone !== "string") {
+      return sendError(res, 400, "Phone must be a string.");
     }
 
-    if (
-      bio !== undefined &&
-      typeof bio !== "string"
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Bio must be a string.",
-      });
+    if (bio !== undefined && typeof bio !== "string") {
+      return sendError(res, 400, "Bio must be a string.");
     }
 
-    // Validate specialization ID
     if (!mongoose.isValidObjectId(specialization)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid specialization ID.",
-      });
+      return sendError(res, 400, "Invalid specialization ID.");
     }
 
-    // Check duplicate email or username
+    const specializationExists = await Specialization.findOne({
+      _id: specialization,
+      isActive: true,
+    });
+
+    if (!specializationExists) {
+      return sendError(res, 404, "Active specialization not found.");
+    }
+
     const existingUser = await User.findOne({
       $or: [
         { email: normalizedEmail },
@@ -141,32 +125,15 @@ const createDoctor = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email or username already exists.",
-      });
+      return sendError(res, 409, "Email or username already exists.");
     }
 
-    // Verify active specialization
-    const specializationExists = await Specialization.findOne({
-      _id: specialization,
-      isActive: true,
-    });
-
-    if (!specializationExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Active specialization not found.",
-      });
-    }
-
-    // Start MongoDB transaction
+    // Create the login account and doctor profile together.
     session = await mongoose.startSession();
 
     let createdDoctor;
 
     await session.withTransaction(async () => {
-      // Create doctor login account
       const [doctorUser] = await User.create(
         [
           {
@@ -183,7 +150,6 @@ const createDoctor = async (req, res) => {
         { session }
       );
 
-      // Create doctor professional profile
       const [doctorProfile] = await Doctor.create(
         [
           {
@@ -205,22 +171,14 @@ const createDoctor = async (req, res) => {
       message: "Doctor account created successfully.",
       doctor: createdDoctor,
     });
-
   } catch (error) {
     console.error("Create doctor error:", error);
 
     if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: "Email or username already exists.",
-      });
+      return sendError(res, 409, "Email or username already exists.");
     }
 
-    return res.status(500).json({
-      success: false,
-      message: "Server error while creating doctor.",
-    });
-
+    return sendError(res, 500, "Server error while creating doctor.");
   } finally {
     if (session) {
       await session.endSession();
@@ -228,17 +186,13 @@ const createDoctor = async (req, res) => {
   }
 };
 
-
-// GET ALL DOCTORS
+// GET ALL DOCTORS (ADMIN)
 const getAllDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find()
       .populate({
         path: "user",
-        match: {
-          role: "doctor",
-          isActive: true,
-        },
+        match: { role: "doctor", isActive: true },
         select: "name username email phone profileImage isActive",
       })
       .populate({
@@ -247,9 +201,49 @@ const getAllDoctors = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // Remove doctors whose user account is inactive or missing
+    const activeDoctors = doctors.filter((doctor) => doctor.user);
+
+    return res.status(200).json({
+      success: true,
+      count: activeDoctors.length,
+      doctors: activeDoctors,
+    });
+  } catch (error) {
+    console.error("Get doctors error:", error);
+    return sendError(res, 500, "Server error while fetching doctors.");
+  }
+};
+
+// GET PUBLIC DOCTORS (PATIENT BROWSING)
+const getPublicDoctors = async (req, res) => {
+  try {
+    const filter = { isAvailable: true };
+
+    // Optional specialization filter:
+    // GET /api/doctors/public?specialization=<specializationId>
+    if (req.query.specialization) {
+      if (!mongoose.isValidObjectId(req.query.specialization)) {
+        return sendError(res, 400, "Invalid specialization ID.");
+      }
+
+      filter.specialization = req.query.specialization;
+    }
+
+    const doctors = await Doctor.find(filter)
+      .populate({
+        path: "user",
+        match: { role: "doctor", isActive: true },
+        select: "name profileImage",
+      })
+      .populate({
+        path: "specialization",
+        match: { isActive: true },
+        select: "name description",
+      })
+      .sort({ createdAt: -1 });
+
     const activeDoctors = doctors.filter(
-      (doctor) => doctor.user !== null
+      (doctor) => doctor.user && doctor.specialization
     );
 
     return res.status(200).json({
@@ -257,19 +251,387 @@ const getAllDoctors = async (req, res) => {
       count: activeDoctors.length,
       doctors: activeDoctors,
     });
-
   } catch (error) {
-    console.error("Get doctors error:", error);
+    console.error("Get public doctors error:", error);
+    return sendError(res, 500, "Server error while fetching doctors.");
+  }
+};
 
+// GET DOCTOR BY ID (ADMIN)
+const getDoctorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(res, 400, "Invalid doctor ID.");
+    }
+
+    const doctor = await Doctor.findById(id)
+      .populate({
+        path: "user",
+        match: { role: "doctor", isActive: true },
+        select: "name username email phone profileImage isActive",
+      })
+      .populate({
+        path: "specialization",
+        select: "name description isActive",
+      });
+
+    if (!doctor || !doctor.user) {
+      return sendError(
+        res,
+        404,
+        "Doctor not found or account is inactive."
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      doctor,
+    });
+  } catch (error) {
+    console.error("Get doctor by ID error:", error);
+    return sendError(res, 500, "Server error while fetching doctor.");
+  }
+};
+
+// UPDATE DOCTOR (ADMIN)
+const updateDoctor = async (req, res) => {
+  let session;
+
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(res, 400, "Invalid doctor ID.");
+    }
+
+    const {
+      name,
+      username,
+      email,
+      phone,
+      specialization,
+      experience,
+      bio,
+      consultationFee,
+    } = req.body || {};
+
+    const doctor = await Doctor.findById(id);
+
+    if (!doctor) {
+      return sendError(res, 404, "Doctor not found.");
+    }
+
+    const user = await User.findOne({
+      _id: doctor.user,
+      role: "doctor",
+    });
+
+    if (!user) {
+      return sendError(res, 404, "Doctor account not found.");
+    }
+
+    // Validate and prepare User fields.
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return sendError(res, 400, "Name must be a non-empty string.");
+      }
+
+      user.name = name.trim();
+    }
+
+    if (username !== undefined) {
+      if (typeof username !== "string" || !username.trim()) {
+        return sendError(res, 400, "Username must be a non-empty string.");
+      }
+
+      user.username = username.trim().toLowerCase();
+    }
+
+    if (email !== undefined) {
+      if (typeof email !== "string" || !email.trim()) {
+        return sendError(res, 400, "Email must be a non-empty string.");
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+
+      if (!isValidEmail(normalizedEmail)) {
+        return sendError(res, 400, "Please provide a valid email address.");
+      }
+
+      user.email = normalizedEmail;
+    }
+
+    if (phone !== undefined) {
+      if (typeof phone !== "string") {
+        return sendError(res, 400, "Phone must be a string.");
+      }
+
+      user.phone = phone.trim();
+    }
+
+    // Validate and prepare Doctor fields.
+    if (specialization !== undefined) {
+      if (
+        typeof specialization !== "string" ||
+        !mongoose.isValidObjectId(specialization)
+      ) {
+        return sendError(res, 400, "Invalid specialization ID.");
+      }
+
+      const specializationExists = await Specialization.findOne({
+        _id: specialization,
+        isActive: true,
+      });
+
+      if (!specializationExists) {
+        return sendError(res, 404, "Active specialization not found.");
+      }
+
+      doctor.specialization = specialization;
+    }
+
+    if (experience !== undefined) {
+      const doctorExperience = Number(experience);
+
+      if (
+        experience === "" ||
+        !Number.isFinite(doctorExperience) ||
+        doctorExperience < 0
+      ) {
+        return sendError(
+          res,
+          400,
+          "Experience must be a valid non-negative number."
+        );
+      }
+
+      doctor.experience = doctorExperience;
+    }
+
+    if (bio !== undefined) {
+      if (typeof bio !== "string") {
+        return sendError(res, 400, "Bio must be a string.");
+      }
+
+      doctor.bio = bio.trim();
+    }
+
+    if (consultationFee !== undefined) {
+      const fee = Number(consultationFee);
+
+      if (
+        consultationFee === "" ||
+        !Number.isFinite(fee) ||
+        fee < 0
+      ) {
+        return sendError(
+          res,
+          400,
+          "Consultation fee must be a valid non-negative number."
+        );
+      }
+
+      doctor.consultationFee = fee;
+    }
+
+    // Check uniqueness excluding this doctor's own User document.
+    const duplicateUser = await User.findOne({
+      _id: { $ne: user._id },
+      $or: [
+        { email: user.email },
+        { username: user.username },
+      ],
+    });
+
+    if (duplicateUser) {
+      return sendError(res, 409, "Email or username already exists.");
+    }
+
+    // Save both documents atomically.
+    session = await mongoose.startSession();
+
+    await session.withTransaction(async () => {
+      await user.save({ session });
+      await doctor.save({ session });
+    });
+
+    const updatedDoctor = await Doctor.findById(id)
+      .populate({
+        path: "user",
+        select: "name username email phone profileImage isActive",
+      })
+      .populate({
+        path: "specialization",
+        select: "name description isActive",
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Doctor updated successfully.",
+      doctor: updatedDoctor,
+    });
+  } catch (error) {
+    console.error("Update doctor error:", error);
+
+    if (error.code === 11000) {
+      return sendError(res, 409, "Email or username already exists.");
+    }
+
+    return sendError(res, 500, "Server error while updating doctor.");
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
+  }
+};
+
+// DEACTIVATE DOCTOR (ADMIN)
+const deactivateDoctor = async (req, res) => {
+  let session;
+
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(res, 400, "Invalid doctor ID.");
+    }
+
+    const doctor = await Doctor.findById(id);
+
+    if (!doctor) {
+      return sendError(res, 404, "Doctor not found.");
+    }
+
+    const user = await User.findOne({
+      _id: doctor.user,
+      role: "doctor",
+    });
+
+    if (!user) {
+      return sendError(res, 404, "Doctor account not found.");
+    }
+
+    if (!user.isActive && !doctor.isAvailable) {
+      return sendError(res, 400, "Doctor is already deactivated.");
+    }
+
+    session = await mongoose.startSession();
+
+    await session.withTransaction(async () => {
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { isActive: false } },
+        { session }
+      );
+
+      await Doctor.updateOne(
+        { _id: doctor._id },
+        { $set: { isAvailable: false } },
+        { session }
+      );
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Doctor deactivated successfully.",
+    });
+  } catch (error) {
+    console.error("Deactivate doctor error:", error);
+    return sendError(res, 500, "Server error while deactivating doctor.");
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
+  }
+};
+// DOCTOR UPDATES OWN PROFILE
+const updateMyDoctorProfile = async (req, res) => {
+  try {
+    const { name, phone, profileImage, bio } = req.body;
+
+    const doctor = await Doctor.findOne({ user: req.user._id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        message: "Doctor profile not found",
+      });
+    }
+
+    const user = await User.findOne({
+      _id: req.user._id,
+      role: "doctor",
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Doctor account not found",
+      });
+    }
+
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({
+          message: "Name is required",
+        });
+      }
+      user.name = name.trim();
+    }
+
+    if (phone !== undefined) {
+      if (typeof phone !== "string") {
+        return res.status(400).json({
+          message: "Invalid phone number",
+        });
+      }
+      user.phone = phone.trim();
+    }
+
+    if (profileImage !== undefined) {
+      if (typeof profileImage !== "string") {
+        return res.status(400).json({
+          message: "Profile image must be a URL string",
+        });
+      }
+      user.profileImage = profileImage.trim();
+    }
+
+    if (bio !== undefined) {
+      if (typeof bio !== "string") {
+        return res.status(400).json({
+          message: "Bio must be a string",
+        });
+      }
+      doctor.bio = bio.trim();
+    }
+
+    await user.save();
+    await doctor.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      profile: {
+        name: user.name,
+        phone: user.phone,
+        profileImage: user.profileImage,
+        bio: doctor.bio,
+      },
+    });
+  } catch (error) {
+    console.error("Update own doctor profile error:", error);
     return res.status(500).json({
-      success: false,
-      message: "Server error while fetching doctors.",
+      message: "Failed to update profile",
     });
   }
 };
 
-
 module.exports = {
   createDoctor,
   getAllDoctors,
+  getPublicDoctors,
+  getDoctorById,
+  updateDoctor,
+  deactivateDoctor,
+  updateMyDoctorProfile,
 };
