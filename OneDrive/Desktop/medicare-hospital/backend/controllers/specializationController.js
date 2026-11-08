@@ -166,9 +166,33 @@ const deactivateSpecialization = async (req, res) => {
   }
 };
 
+// GET ACTIVE SPECIALIZATIONS (PUBLIC - PATIENT BROWSING)
+const getPublicSpecializations = async (req, res) => {
+  try {
+    const specializations = await Specialization.find({
+      isActive: true,
+    }).sort({ name: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: specializations.length,
+      specializations,
+    });
+  } catch (error) {
+    console.error("Get public specializations error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching specializations.",
+    });
+  }
+};
+
+
 module.exports = {
   createSpecialization,
   getAllSpecializations,
   updateSpecialization,
   deactivateSpecialization,
+   getPublicSpecializations,
 };

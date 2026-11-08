@@ -155,8 +155,63 @@ const getMyAvailability = async (req, res) => {
     });
   }
 };
+// GET A DOCTOR'S AVAILABLE DATES (PUBLIC - FOR PATIENTS)
+const getDoctorAvailability = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid doctor ID.",
+      });
+    }
+
+    const doctor = await Doctor.findOne({
+      _id: doctorId,
+      isAvailable: true,
+    }).populate({
+      path: "user",
+      match: { role: "doctor", isActive: true },
+      select: "name profileImage",
+    });
+
+    if (!doctor || !doctor.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found or unavailable.",
+      });
+    }
+
+    const todayString = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Kolkata",
+    });
+
+    const todayUTC = new Date(`${todayString}T00:00:00.000Z`);
+
+    const availability = await DoctorAvailability.find({
+      doctor: doctor._id,
+      isAvailable: true,
+      date: { $gte: todayUTC },
+    }).sort({ date: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: availability.length,
+      availability,
+    });
+  } catch (error) {
+    console.error("Get doctor availability error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching doctor availability.",
+    });
+  }
+};
 
 module.exports = {
   addAvailability,
   getMyAvailability,
+   getDoctorAvailability,
 };

@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   addAvailability,
   getMyAvailability,
+  getDoctorAvailability,
 } = require("../controllers/availabilityController");
 
 const {
@@ -11,6 +12,10 @@ const {
   authorizeRoles,
 } = require("../middleware/authMiddleware");
 
+// PUBLIC: Patients can view a doctor's available dates
+router.get("/doctor/:doctorId", getDoctorAvailability);
+
+// DOCTOR: Add available dates
 router.post(
   "/",
   protect,
@@ -18,6 +23,7 @@ router.post(
   addAvailability
 );
 
+// DOCTOR: View own available dates
 router.get(
   "/my",
   protect,
