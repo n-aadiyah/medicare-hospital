@@ -6,7 +6,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const specializationRoutes = require("./routes/specializationRoutes");
-
+const doctorRoutes = require("./routes/doctorRoutes");
 const app = express();
 
 // Middleware
@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 // Authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/specializations", specializationRoutes);
-
+app.use("/api/doctors", doctorRoutes);
 // Server configuration
 const PORT = process.env.PORT || 5000;
 
