@@ -206,5 +206,5 @@ module.exports = {
   getDashboardStats,
   getAllPatients,
   getPatientAppointmentHistory,
-  getAllAppointments
+  getAllAppointments,
 };
