@@ -27,7 +27,8 @@ const emptyDoctor = {
   specialization: '',
   experience: '',
   bio: '',
-  consultationFee: ''
+  consultationFee: '',
+  profileImage: ''
 };
 
 const emptySpecialization = {
@@ -61,6 +62,7 @@ const AdminDashboard = () => {
   const [showDoctorForm, setShowDoctorForm] = useState(false);
   const [editingDoctorId, setEditingDoctorId] = useState(null);
   const [doctorSaving, setDoctorSaving] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [doctorForm, setDoctorForm] = useState(emptyDoctor);
 
   // Specialization management
@@ -272,12 +274,69 @@ const fetchAppointments = async (filters = appointmentFilters) => {
       specialization: doctor.specialization?._id || '',
       experience: doctor.experience ?? '',
       bio: doctor.bio || '',
-      consultationFee: doctor.consultationFee ?? ''
+      consultationFee: doctor.consultationFee ?? '',
+      profileImage: doctor.user?.profileImage || ''
     });
 
     setDoctorError('');
     setDoctorMessage('');
     setShowDoctorForm(true);
+  };
+
+  // Upload a doctor photo directly to Cloudinary. Only the resulting URL is sent to the API.
+  const handleDoctorPhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setDoctorError('Please select a JPG, PNG, or WEBP image.');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setDoctorError('Image size must be 2 MB or less.');
+      e.target.value = '';
+      return;
+    }
+
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      setDoctorError('Cloudinary is not configured. Check the frontend environment variables and restart Vite.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      setPhotoUploading(true);
+      setDoctorError('');
+      setDoctorMessage('');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.secure_url) {
+        throw new Error(data.error?.message || 'Cloudinary photo upload failed.');
+      }
+
+      handleDoctorChange('profileImage', data.secure_url);
+      setDoctorMessage('Photo uploaded. Save the doctor form to keep the photo on the doctor profile.');
+    } catch (err) {
+      setDoctorError(err.message || 'Unable to upload doctor photo.');
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
   };
 
   // Add or update doctor
@@ -297,7 +356,8 @@ const fetchAppointments = async (filters = appointmentFilters) => {
         specialization: doctorForm.specialization,
         experience: Number(doctorForm.experience),
         bio: doctorForm.bio.trim(),
-        consultationFee: Number(doctorForm.consultationFee)
+        consultationFee: Number(doctorForm.consultationFee),
+        profileImage: doctorForm.profileImage
       };
 
       if (!editingDoctorId) {
@@ -719,12 +779,27 @@ const fetchAppointments = async (filters = appointmentFilters) => {
                             {doctors.map((doctor) => (
                               <tr key={doctor._id}>
                                 <td>
-                                  <div className="fw-semibold">
-                                    {doctor.user?.name || 'Unknown'}
+                                  <div className="d-flex align-items-center gap-2">
+                                    {doctor.user?.profileImage ? (
+                                      <img
+                                        src={doctor.user.profileImage}
+                                        alt=""
+                                        style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '50%' }}
+                                      />
+                                    ) : (
+                                      <div className="rounded-circle bg-light d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px' }}>
+                                        <Stethoscope size={18} className="text-muted" />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="fw-semibold">
+                                        {doctor.user?.name || 'Unknown'}
                                   </div>
-                                  <small className="text-muted">
-                                    {doctor.user?.email || ''}
-                                  </small>
+                                      <small className="text-muted">
+                                        {doctor.user?.email || ''}
+                                      </small>
+                                    </div>
+                                  </div>
                                 </td>
 
                                 <td>
@@ -918,6 +993,38 @@ const fetchAppointments = async (filters = appointmentFilters) => {
                       </div>
 
                       <div className="col-12">
+                        <label className="form-label">Doctor Photo</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleDoctorPhotoChange}
+                          disabled={photoUploading}
+                        />
+                        <small className="text-muted d-block mt-1">JPG, PNG, or WEBP. Maximum size: 2 MB.</small>
+                        {photoUploading && (
+                          <small className="text-primary d-block mt-2">Uploading photo...</small>
+                        )}
+                        {doctorForm.profileImage && (
+                          <div className="mt-3">
+                            <img
+                              src={doctorForm.profileImage}
+                              alt="Doctor preview"
+                              style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }}
+                            />
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger ms-3"
+                              onClick={() => handleDoctorChange('profileImage', '')}
+                              disabled={photoUploading}
+                            >
+                              Remove photo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-12">
                         <label className="form-label">Bio</label>
                         <textarea
                           className="form-control"
@@ -934,7 +1041,7 @@ const fetchAppointments = async (filters = appointmentFilters) => {
                       <button
                         type="submit"
                         className="btn btn-primary-custom"
-                        disabled={doctorSaving}
+                        disabled={doctorSaving || photoUploading}
                       >
                         {doctorSaving
                           ? 'Saving...'

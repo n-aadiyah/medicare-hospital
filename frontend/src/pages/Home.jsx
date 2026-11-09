@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   HeartPulse,
@@ -8,10 +8,13 @@ import {
   ShieldCheck,
   Clock,
   ArrowRight,
-  Menu,
   Activity,
   Users,
   Award,
+  Search,
+  Menu,
+  MapPin,
+  ChevronRight,
 } from "lucide-react";
 import api from "../services/api";
 import "./Home.css";
@@ -20,6 +23,8 @@ function Home() {
   const [specializations, setSpecializations] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -29,15 +34,11 @@ function Home() {
           api.get("/doctors/public"),
         ]);
 
-        setSpecializations(
-          specializationRes.data.specializations || []
-        );
-
-        setDoctors(
-          doctorRes.data.doctors || []
-        );
+        setSpecializations(specializationRes.data.specializations || []);
+        setDoctors(doctorRes.data.doctors || []);
       } catch (error) {
         console.error("Homepage data error:", error);
+        setLoadError("Unable to load doctors and specialities right now.");
       } finally {
         setLoading(false);
       }
@@ -46,16 +47,51 @@ function Home() {
     fetchHomeData();
   }, []);
 
+  const filteredSpecializations = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return specializations;
+
+    return specializations.filter((item) =>
+      `${item.name} ${item.description || ""}`.toLowerCase().includes(search)
+    );
+  }, [specializations, searchTerm]);
+
+  const filteredDoctors = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return doctors;
+
+    return doctors.filter((doctor) =>
+      `${doctor.user?.name || ""} ${doctor.specialization?.name || ""} ${
+        doctor.bio || ""
+      }`.toLowerCase().includes(search)
+    );
+  }, [doctors, searchTerm]);
+
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="medicare-home">
+      {/* Top header */}
+      <div className="medicare-topbar">
+        <div className="container d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center gap-2">
+            <HeartPulse size={16} />
+            <span>Healthcare access made simpler</span>
+          </div>
+          <div className="d-none d-md-flex align-items-center gap-4">
+            <span><Clock size={15} /> Online appointment booking</span>
+            <span><ShieldCheck size={15} /> Patient-focused care</span>
+          </div>
+        </div>
+      </div>
 
-      {/* Navigation */}
+      {/* Main navigation */}
       <nav className="navbar navbar-expand-lg medicare-navbar">
         <div className="container">
           <Link className="navbar-brand medicare-brand" to="/">
-            <span className="brand-icon">
-              <HeartPulse size={27} />
-            </span>
+            <span className="brand-icon"><HeartPulse size={29} /></span>
             MediCare<span className="brand-dot">.</span>
           </Link>
 
@@ -64,6 +100,9 @@ function Home() {
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
           >
             <Menu />
           </button>
@@ -80,19 +119,19 @@ function Home() {
                 <a className="nav-link" href="#specializations">Specialities</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#doctors">Our Doctors</a>
+                <a className="nav-link" href="#doctors">Doctors</a>
               </li>
               <li className="nav-item">
                 <a className="nav-link" href="#contact">Contact</a>
               </li>
             </ul>
 
-            <div className="d-flex gap-2">
+            <div className="d-flex flex-wrap gap-2 nav-actions">
               <Link to="/login" className="btn btn-outline-medicare">
-                Login
+                Patient Login
               </Link>
               <Link to="/login" className="btn btn-medicare">
-                Book Appointment
+                Book Appointment <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -103,63 +142,95 @@ function Home() {
       <section className="hero-section" id="home">
         <div className="container">
           <div className="row align-items-center gy-5">
-            <div className="col-lg-6">
+            <div className="col-lg-7">
               <span className="hero-label">
-                <HeartPulse size={16} />
+                <HeartPulse size={17} />
                 YOUR HEALTH, OUR PRIORITY
               </span>
 
               <h1>
-                Caring for You.
+                Healthcare that
                 <br />
-                <span>Every Step of the Way.</span>
+                <span>puts you first.</span>
               </h1>
 
               <p className="hero-description">
-                Experience quality healthcare with experienced
-                doctors, personalized attention and convenient
-                online appointment booking.
+                Discover medical specialities, connect with healthcare
+                professionals and manage your appointments through one
+                convenient platform.
               </p>
+
+              <div className="hero-search mt-4">
+                <Search size={19} />
+                <input
+                  type="search"
+                  value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search doctors or specialities..."
+                  aria-label="Search doctors or specialities"
+                />
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("specializations")}
+                >
+                  Search
+                </button>
+              </div>
 
               <div className="d-flex flex-wrap gap-3 mt-4">
                 <Link to="/login" className="btn btn-medicare btn-lg">
-                  Book an Appointment
-                  <ArrowRight size={18} />
+                  Book an Appointment <ArrowRight size={18} />
                 </Link>
-
-                <a href="#specializations" className="btn btn-outline-medicare btn-lg">
+                <a
+                  href="#specializations"
+                  className="btn btn-outline-medicare btn-lg"
+                >
                   Explore Specialities
                 </a>
               </div>
 
-              <div className="hero-trust mt-5">
-                <div>
-                  <ShieldCheck />
-                  <span>Trusted Healthcare</span>
-                </div>
-                <div>
-                  <Clock />
-                  <span>Easy Online Booking</span>
-                </div>
+              <div className="hero-trust mt-4">
+                <div><ShieldCheck size={18} /> Patient-focused platform</div>
+                <div><CalendarCheck size={18} /> Convenient scheduling</div>
               </div>
             </div>
 
-            <div className="col-lg-6">
-              <div className="hero-image-wrapper">
+            <div className="col-lg-5">
+              <div className="hero-visual">
                 <img
                   src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=1000"
                   alt="Healthcare professional"
                   className="hero-image"
                 />
 
-                <div className="hero-floating-card">
-                  <div className="floating-icon">
-                    <CalendarCheck />
+                <div className="hero-info-card">
+                  <div className="hero-info-icon">
+                    <CalendarCheck size={25} />
                   </div>
                   <div>
-                    <strong>Easy Appointments</strong>
-                    <p>Book your visit online</p>
+                    <strong>Your healthcare, organised.</strong>
+                    <p>Explore doctors and available appointment dates.</p>
                   </div>
+                </div>
+
+                <div className="hero-data-panel">
+                  <div className="hero-panel-heading">
+                    <Activity size={19} />
+                    <span>Explore MediCare</span>
+                  </div>
+                  <div className="hero-panel-stats">
+                    <div>
+                      <strong>{loading ? "—" : specializations.length}</strong>
+                      <span>Specialities</span>
+                    </div>
+                    <div>
+                      <strong>{loading ? "—" : doctors.length}</strong>
+                      <span>Available doctors</span>
+                    </div>
+                  </div>
+                  <Link to="/login">
+                    Get started <ArrowRight size={15} />
+                  </Link>
                 </div>
               </div>
             </div>
@@ -172,16 +243,32 @@ function Home() {
         <div className="container">
           <div className="row g-3">
             {[
-              { icon: Stethoscope, title: "Expert Doctors", text: "Qualified medical professionals" },
-              { icon: CalendarCheck, title: "Easy Booking", text: "Convenient appointment scheduling" },
-              { icon: ShieldCheck, title: "Patient First", text: "Care focused on your needs" },
-              { icon: HeartPulse, title: "Quality Care", text: "Healthcare you can trust" },
-            ].map((item, index) => {
+              {
+                icon: Stethoscope,
+                title: "Doctor Profiles",
+                text: "Explore doctors and their experience",
+              },
+              {
+                icon: CalendarCheck,
+                title: "Easy Booking",
+                text: "Schedule appointments online",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Patient Portal",
+                text: "Access your appointment details",
+              },
+              {
+                icon: HeartPulse,
+                title: "Patient First",
+                text: "A convenient healthcare experience",
+              },
+            ].map((item) => {
               const Icon = item.icon;
               return (
-                <div className="col-6 col-lg-3" key={index}>
+                <div className="col-6 col-lg-3" key={item.title}>
                   <div className="highlight-card">
-                    <Icon size={28} />
+                    <Icon size={27} />
                     <h5>{item.title}</h5>
                     <p>{item.text}</p>
                   </div>
@@ -202,12 +289,11 @@ function Home() {
                 Healthcare designed around you.
               </h2>
               <p className="section-description">
-                MediCare makes accessing healthcare simpler.
-                Discover medical specialities, explore doctor
-                profiles, schedule appointments and keep track
-                of your healthcare journey in one place.
+                MediCare brings patients and healthcare professionals
+                together through a simple digital platform. Browse
+                specialities, view doctor profiles, book appointments and
+                keep track of your healthcare journey.
               </p>
-
               <Link to="/login" className="text-medicare-link">
                 Get started <ArrowRight size={17} />
               </Link>
@@ -215,34 +301,53 @@ function Home() {
 
             <div className="col-lg-6">
               <div className="about-card">
-                <Activity size={38} />
-                <h3>Care that puts patients first</h3>
+                <Activity size={39} />
+                <h3>Care made more convenient</h3>
                 <p>
-                  A convenient digital experience connecting
-                  patients with healthcare professionals.
+                  Find the information you need, choose an available doctor
+                  and manage your appointments in one place.
                 </p>
+                <div className="about-card-points">
+                  <span><CheckCircleIcon /> Browse medical specialities</span>
+                  <span><CheckCircleIcon /> View doctor availability</span>
+                  <span><CheckCircleIcon /> Manage appointment history</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Specializations */}
-      <section className="section-padding bg-light-medicare" id="specializations">
+      {/* Specialities */}
+      <section
+        className="section-padding bg-light-medicare"
+        id="specializations"
+      >
         <div className="container">
-          <div className="text-center section-intro">
-            <span className="section-label">OUR SPECIALITIES</span>
-            <h2 className="section-heading">Explore Our Medical Specialities</h2>
-            <p className="section-description">
-              Find the right medical speciality for your healthcare needs.
-            </p>
+          <div className="section-topline">
+            <div>
+              <span className="section-label">OUR SPECIALITIES</span>
+              <h2 className="section-heading">
+                Explore Medical Specialities
+              </h2>
+              <p className="section-description">
+                Find a speciality and explore the doctors available.
+              </p>
+            </div>
+            <Link to="/login" className="text-medicare-link">
+              Patient Login <ArrowRight size={16} />
+            </Link>
           </div>
 
-          <div className="row g-4 mt-3">
+          {loadError && <p className="home-error">{loadError}</p>}
+
+          <div className="row g-4 mt-2">
             {loading ? (
-              <div className="col-12 text-center">Loading specialities...</div>
-            ) : specializations.length > 0 ? (
-              specializations.map((item) => (
+              <div className="col-12 text-center py-4">
+                Loading specialities...
+              </div>
+            ) : filteredSpecializations.length > 0 ? (
+              filteredSpecializations.map((item) => (
                 <div className="col-6 col-md-4 col-lg-3" key={item._id}>
                   <div className="specialty-card">
                     <div className="specialty-icon">
@@ -251,14 +356,14 @@ function Home() {
                     <h5>{item.name}</h5>
                     <p>{item.description || "Specialized medical care"}</p>
                     <Link to="/login">
-                      Explore <ArrowRight size={15} />
+                      Explore doctors <ChevronRight size={16} />
                     </Link>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="col-12 text-center">
-                No specialities available at the moment.
+              <div className="col-12 text-center py-4">
+                No matching specialities found.
               </div>
             )}
           </div>
@@ -268,37 +373,48 @@ function Home() {
       {/* Doctors */}
       <section className="section-padding" id="doctors">
         <div className="container">
-          <div className="text-center section-intro">
-            <span className="section-label">OUR MEDICAL TEAM</span>
-            <h2 className="section-heading">Meet Our Doctors</h2>
-            <p className="section-description">
-              Get to know our available healthcare professionals.
-            </p>
+          <div className="section-topline">
+            <div>
+              <span className="section-label">OUR MEDICAL TEAM</span>
+              <h2 className="section-heading">Meet Our Doctors</h2>
+              <p className="section-description">
+                Explore the profiles of our available healthcare professionals.
+              </p>
+            </div>
+            <Link to="/login" className="text-medicare-link">
+              Book appointment <ArrowRight size={16} />
+            </Link>
           </div>
 
-          <div className="row g-4 mt-3">
+          <div className="row g-4 mt-2">
             {loading ? (
-              <div className="col-12 text-center">Loading doctors...</div>
-            ) : doctors.length > 0 ? (
-              doctors.slice(0, 4).map((doctor) => (
-                <div className="col-md-6 col-lg-3" key={doctor._id}>
+              <div className="col-12 text-center py-4">Loading doctors...</div>
+            ) : filteredDoctors.length > 0 ? (
+              filteredDoctors.slice(0, 4).map((doctor) => (
+                <div className="col-sm-6 col-lg-3" key={doctor._id}>
                   <div className="doctor-card">
                     <div className="doctor-photo">
                       {doctor.user?.profileImage ? (
                         <img
                           src={doctor.user.profileImage}
                           alt={doctor.user?.name || "Doctor"}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
                         />
                       ) : (
                         <Stethoscope size={45} />
                       )}
                     </div>
                     <div className="doctor-details">
-                      <h5>{doctor.user?.name || "Doctor"}</h5>
-                      <span>
+                      <span className="doctor-speciality">
                         {doctor.specialization?.name || "Medical Specialist"}
                       </span>
-                      <p>{doctor.experience || 0} years experience</p>
+                      <h5>{doctor.user?.name || "Doctor"}</h5>
+                      <p>
+                        <Award size={15} />
+                        {doctor.experience ?? 0} years experience
+                      </p>
                       <Link to="/login" className="doctor-link">
                         Book Appointment <ArrowRight size={15} />
                       </Link>
@@ -307,15 +423,15 @@ function Home() {
                 </div>
               ))
             ) : (
-              <div className="col-12 text-center">
-                No doctors are currently available.
+              <div className="col-12 text-center py-4">
+                No matching doctors found.
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Why choose us */}
+      {/* Why MediCare */}
       <section className="why-section section-padding">
         <div className="container">
           <div className="text-center section-intro">
@@ -325,13 +441,25 @@ function Home() {
 
           <div className="row g-4 mt-3">
             {[
-              { icon: Users, title: "Patient Focused", text: "A convenient experience built around patient needs." },
-              { icon: Award, title: "Qualified Professionals", text: "Explore doctor profiles and their experience." },
-              { icon: CalendarCheck, title: "Convenient Scheduling", text: "View available dates and book appointments online." },
-            ].map((item, index) => {
+              {
+                icon: Users,
+                title: "Patient Focused",
+                text: "Access your appointments and healthcare information through your patient account.",
+              },
+              {
+                icon: Award,
+                title: "Doctor Information",
+                text: "Explore doctor profiles, specialities and professional experience.",
+              },
+              {
+                icon: CalendarCheck,
+                title: "Convenient Scheduling",
+                text: "View available dates and request appointments online.",
+              },
+            ].map((item) => {
               const Icon = item.icon;
               return (
-                <div className="col-md-4" key={index}>
+                <div className="col-md-4" key={item.title}>
                   <div className="why-card">
                     <Icon size={32} />
                     <h5>{item.title}</h5>
@@ -347,10 +475,13 @@ function Home() {
       {/* CTA */}
       <section className="cta-section">
         <div className="container text-center">
-          <h2>Your health deserves attention.</h2>
-          <p>Take the first step towards convenient healthcare today.</p>
+          <span className="cta-eyebrow">YOUR HEALTHCARE JOURNEY STARTS HERE</span>
+          <h2>Take the next step towards better care.</h2>
+          <p>
+            Sign in to explore doctors and schedule your appointment.
+          </p>
           <Link to="/login" className="btn btn-light btn-lg">
-            Book Your Appointment <ArrowRight size={18} />
+            Get Started <ArrowRight size={18} />
           </Link>
         </div>
       </section>
@@ -361,16 +492,16 @@ function Home() {
           <div className="row gy-4">
             <div className="col-lg-5">
               <Link className="footer-brand" to="/">
-                <HeartPulse size={25} /> MediCare.
+                <HeartPulse size={26} /> MediCare.
               </Link>
               <p>
-                Making healthcare more accessible through
-                convenient digital services and patient-focused care.
+                Making healthcare access simpler through convenient
+                digital services and patient-focused care.
               </p>
             </div>
 
             <div className="col-6 col-lg-3">
-              <h6>Quick Links</h6>
+              <h6>Explore</h6>
               <a href="#about">About Us</a>
               <a href="#specializations">Specialities</a>
               <a href="#doctors">Our Doctors</a>
@@ -391,6 +522,10 @@ function Home() {
       </footer>
     </div>
   );
+}
+
+function CheckCircleIcon() {
+  return <ShieldCheck size={17} />;
 }
 
 export default Home;

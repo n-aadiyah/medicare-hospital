@@ -334,3 +334,437 @@
   .cta-section h2 { font-size: 28px; }
   .medicare-navbar .btn { padding: 9px 12px; font-size: 13px; }
 }
+
+/* ===== Reference-inspired MediCare homepage additions ===== */
+
+.medicare-topbar {
+  background: #123b49;
+  color: #dcebed;
+  padding: 9px 0;
+  font-size: 12px;
+}
+
+.medicare-topbar .container > div {
+  gap: 7px;
+}
+
+.medicare-topbar svg {
+  color: #65d0c2;
+}
+
+.medicare-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 15px 0;
+}
+
+.medicare-navbar .navbar-toggler {
+  border: 1px solid #dce8eb;
+  padding: 7px 10px;
+  color: #147d89;
+  box-shadow: none;
+}
+
+.nav-actions {
+  align-items: center;
+}
+
+.hero-section {
+  position: relative;
+  padding: 78px 0 90px;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(66, 183, 174, .13), transparent 28%),
+    linear-gradient(115deg, #eff9f8 0%, #f6faff 58%, #edf6fb 100%);
+}
+
+.hero-section h1 {
+  letter-spacing: -1.8px;
+}
+
+.hero-description {
+  max-width: 550px;
+}
+
+.hero-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 540px;
+  padding: 7px 8px 7px 16px;
+  background: #fff;
+  border: 1px solid #e1ebed;
+  border-radius: 11px;
+  box-shadow: 0 8px 25px rgba(28, 76, 87, .07);
+}
+
+.hero-search > svg {
+  flex-shrink: 0;
+  color: #168b91;
+}
+
+.hero-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: #243746;
+  background: transparent;
+  font-size: 14px;
+  padding: 9px 0;
+}
+
+.hero-search input::placeholder {
+  color: #9aa9ae;
+}
+
+.hero-search button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 19px;
+  background: #147d89;
+  color: #fff;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.hero-search button:hover {
+  background: #105f6b;
+}
+
+.hero-visual {
+  position: relative;
+  padding: 12px 12px 35px 20px;
+}
+
+.hero-image {
+  height: 440px;
+  border-radius: 22px;
+  object-position: center;
+}
+
+.hero-info-card {
+  position: absolute;
+  left: -5px;
+  bottom: 55px;
+  width: min(300px, 78%);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 12px 35px rgba(20, 50, 70, .13);
+}
+
+.hero-info-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #e5f6f4;
+  color: #168b91;
+}
+
+.hero-info-card strong {
+  display: block;
+  color: #183d4c;
+  font-size: 13px;
+}
+
+.hero-info-card p {
+  margin: 4px 0 0;
+  color: #82919a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.hero-data-panel {
+  position: absolute;
+  right: -3px;
+  bottom: 0;
+  width: 235px;
+  padding: 17px;
+  border: 1px solid #e8eff0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 35px rgba(20, 50, 70, .12);
+}
+
+.hero-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #168b91;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.hero-panel-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 17px 0 12px;
+}
+
+.hero-panel-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hero-panel-stats strong {
+  color: #183d4c;
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.hero-panel-stats span {
+  color: #82919a;
+  font-size: 10px;
+}
+
+.hero-data-panel > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #168b91;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.section-topline {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.section-topline .section-description {
+  margin-bottom: 0;
+}
+
+.section-topline > a {
+  flex-shrink: 0;
+  margin-bottom: 5px;
+}
+
+.about-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2f0ef;
+}
+
+.about-card-points {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.about-card-points span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #526d78;
+  font-size: 13px;
+}
+
+.about-card-points svg {
+  flex-shrink: 0;
+}
+
+.specialty-card {
+  min-height: 225px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.specialty-card p {
+  flex: 1;
+}
+
+.specialty-card a,
+.doctor-link {
+  text-decoration: none;
+}
+
+.doctor-photo {
+  position: relative;
+  overflow: hidden;
+}
+
+.doctor-photo img {
+  transition: transform .35s ease;
+}
+
+.doctor-card:hover .doctor-photo img {
+  transform: scale(1.04);
+}
+
+.doctor-details .doctor-speciality {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-weight: 650;
+}
+
+.doctor-details h5 {
+  margin-bottom: 0;
+}
+
+.doctor-details p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.doctor-details p svg {
+  color: #168b91;
+  flex-shrink: 0;
+}
+
+.home-error {
+  padding: 12px 15px;
+  border: 1px solid #f1cccc;
+  border-radius: 8px;
+  background: #fff6f6;
+  color: #a33b3b;
+  font-size: 14px;
+}
+
+.cta-section {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255,255,255,.12), transparent 25%),
+    linear-gradient(120deg, #126b7b, #168f91);
+}
+
+.cta-eyebrow {
+  display: inline-block;
+  margin-bottom: 13px;
+  color: #bdece5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.cta-section h2 {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.medicare-footer {
+  background: #123541;
+}
+
+@media (max-width: 991px) {
+  .medicare-navbar .navbar-collapse {
+    padding-top: 15px;
+  }
+
+  .nav-actions {
+    padding-top: 12px;
+  }
+
+  .hero-visual {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hero-data-panel {
+    right: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .medicare-topbar {
+    font-size: 11px;
+  }
+
+  .medicare-brand {
+    font-size: 22px;
+  }
+
+  .hero-section {
+    padding: 55px 0 65px;
+  }
+
+  .hero-section h1 {
+    font-size: 38px;
+    letter-spacing: -1px;
+  }
+
+  .hero-search {
+    gap: 8px;
+    padding-left: 11px;
+  }
+
+  .hero-search input {
+    font-size: 12px;
+  }
+
+  .hero-search button {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .hero-visual {
+    padding: 8px 5px 45px;
+  }
+
+  .hero-image {
+    height: 290px;
+    border-radius: 17px;
+  }
+
+  .hero-info-card {
+    left: 0;
+    bottom: 58px;
+    padding: 11px;
+    width: 220px;
+  }
+
+  .hero-info-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .hero-data-panel {
+    right: 0;
+    width: 175px;
+    padding: 12px;
+  }
+
+  .hero-panel-stats {
+    gap: 7px;
+    padding: 12px 0 9px;
+  }
+
+  .hero-panel-stats strong {
+    font-size: 21px;
+  }
+
+  .hero-panel-stats span {
+    font-size: 9px;
+  }
+
+  .section-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .section-topline > a {
+    margin-top: 0;
+  }
+
+  .about-card {
+    padding: 28px;
+  }
+
+  .cta-section h2 {
+    font-size: 28px;
+  }
+}
+
