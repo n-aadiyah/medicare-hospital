@@ -12,6 +12,9 @@ import {
   Search,
   ArrowLeft,
   CheckCircle,
+  Pill,
+ClipboardList,
+CalendarClock,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +44,7 @@ function PatientDashboard() {
   const [appointments, setAppointments] = useState([]);
 const [loadingAppointments, setLoadingAppointments] = useState(false);
 const [prescriptions, setPrescriptions] = useState([]);
+const [prescriptionSearch, setPrescriptionSearch] = useState('');
 const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -440,92 +444,285 @@ useEffect(() => {
   </>
 );
 
-const renderPrescriptions = () => (
-  <>
-    <h2>My Prescriptions</h2>
-    <p className="text-muted">
-      View medicines and instructions prescribed by your doctors.
-    </p>
 
-    {loadingPrescriptions ? (
-      <p>Loading your prescriptions...</p>
-    ) : prescriptions.length === 0 ? (
-      <div className="card p-4 text-center mt-4">
-        <FileText size={35} className="mx-auto mb-2 text-muted" />
-        <h5>No Prescriptions Yet</h5>
-        <p className="text-muted mb-0">
-          Your prescriptions will appear here after your doctor issues them.
-        </p>
+const renderPrescriptions = () => {
+  const totalMedicines = prescriptions.reduce(
+    (total, prescription) =>
+      total + (prescription.medicines?.length || 0),
+    0
+  );
+
+  const uniqueDoctors = new Set(
+    prescriptions
+      .map((prescription) => prescription.doctor?.user?.name)
+      .filter(Boolean)
+  ).size;
+
+  const followUpCount = prescriptions.filter(
+    (prescription) => prescription.followUpDate
+  ).length;
+
+  const filteredPrescriptions = prescriptions.filter((prescription) => {
+    const doctorName = prescription.doctor?.user?.name || '';
+    const medicineNames = (prescription.medicines || [])
+      .map((medicine) => medicine.name || '')
+      .join(' ');
+    const notes = prescription.notes || '';
+
+    const searchText =
+      `${doctorName} ${medicineNames} ${notes}`.toLowerCase();
+
+    return searchText.includes(prescriptionSearch.toLowerCase().trim());
+  });
+
+  return (
+    <div className="prescription-page">
+      {/* Page heading */}
+      <div className="prescription-heading">
+        <div>
+          <span className="prescription-eyebrow">
+            PATIENT HEALTH RECORDS
+          </span>
+          <h2>My Prescriptions</h2>
+          <p>
+            View your prescribed medicines, doctor's instructions and
+            follow-up information in one place.
+          </p>
+        </div>
+
+        <div className="prescription-heading-icon">
+          <FileText size={30} />
+        </div>
       </div>
-    ) : (
-      <div className="row g-3 mt-2">
-        {prescriptions.map((prescription) => (
-          <div className="col-12 col-lg-6" key={prescription._id}>
-            <div className="card p-4 h-100">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <h5 className="mb-1">
-                    Dr. {prescription.doctor?.user?.name || 'Doctor'}
-                  </h5>
-                  <small className="text-muted">
-                    Appointment:{' '}
-                    {prescription.appointment?.appointmentDate
-                      ? formatDate(prescription.appointment.appointmentDate)
-                      : 'Not available'}
-                  </small>
-                </div>
-                <FileText size={24} className="text-primary" />
+
+      {/* Summary cards */}
+      {!loadingPrescriptions && prescriptions.length > 0 && (
+        <div className="row g-3 prescription-stats">
+          <div className="col-6 col-xl-3">
+            <div className="prescription-stat-card">
+              <div className="prescription-stat-icon teal">
+                <ClipboardList size={21} />
               </div>
-
-              <hr />
-
-              <h6 className="mb-3">Prescribed Medicines</h6>
-
-              {prescription.medicines?.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Medicine</th>
-                        <th>Dosage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {prescription.medicines.map((medicine, index) => (
-                        <tr key={index}>
-                          <td>{medicine.name}</td>
-                          <td>{medicine.dosage}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-muted">No medicines listed.</p>
-              )}
-
-              <div className="mt-2">
-                <h6>Doctor's Notes</h6>
-                <p className="text-muted">
-                  {prescription.notes || 'No additional notes.'}
-                </p>
-              </div>
-
               <div>
-                <h6>Follow-up Date</h6>
-                <p className="text-muted mb-0">
-                  {prescription.followUpDate
-                    ? formatDate(prescription.followUpDate)
-                    : 'Not specified'}
-                </p>
+                <h3>{prescriptions.length}</h3>
+                <p>Total Prescriptions</p>
               </div>
             </div>
           </div>
-        ))}
+
+          <div className="col-6 col-xl-3">
+            <div className="prescription-stat-card">
+              <div className="prescription-stat-icon blue">
+                <Pill size={21} />
+              </div>
+              <div>
+                <h3>{totalMedicines}</h3>
+                <p>Prescribed Medicines</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-6 col-xl-3">
+            <div className="prescription-stat-card">
+              <div className="prescription-stat-icon purple">
+                <Stethoscope size={21} />
+              </div>
+              <div>
+                <h3>{uniqueDoctors}</h3>
+                <p>Doctors Consulted</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-6 col-xl-3">
+            <div className="prescription-stat-card">
+              <div className="prescription-stat-icon orange">
+                <CalendarClock size={21} />
+              </div>
+              <div>
+                <h3>{followUpCount}</h3>
+                <p>Follow-up Dates</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prescription list heading and search */}
+      <div className="prescription-list-header">
+        <div>
+          <h4>Prescription History</h4>
+          <p>All prescriptions issued by your doctors</p>
+        </div>
+
+        {!loadingPrescriptions && prescriptions.length > 0 && (
+          <div className="prescription-search">
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Search medicines or doctors..."
+              value={prescriptionSearch}
+              onChange={(e) => setPrescriptionSearch(e.target.value)}
+            />
+          </div>
+        )}
       </div>
-    )}
-  </>
-);
+
+      {/* Loading */}
+      {loadingPrescriptions ? (
+        <div className="prescription-message-card">
+          <div className="spinner-border text-primary mb-3" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <h5>Loading prescriptions</h5>
+          <p>Please wait while we retrieve your records.</p>
+        </div>
+      ) : prescriptions.length === 0 ? (
+        /* No prescriptions */
+        <div className="prescription-message-card">
+          <div className="prescription-empty-icon">
+            <FileText size={35} />
+          </div>
+          <h5>No Prescriptions Yet</h5>
+          <p>
+            Your prescriptions will appear here after your doctor issues
+            them.
+          </p>
+        </div>
+      ) : filteredPrescriptions.length === 0 ? (
+        /* No search results */
+        <div className="prescription-message-card">
+          <Search size={32} className="text-muted mb-3" />
+          <h5>No Matching Prescriptions</h5>
+          <p>Try searching with another doctor or medicine name.</p>
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => setPrescriptionSearch('')}
+          >
+            Clear Search
+          </button>
+        </div>
+      ) : (
+        /* Prescription cards */
+        <div className="prescription-records">
+          {filteredPrescriptions.map((prescription) => (
+            <div className="prescription-record-card" key={prescription._id}>
+              {/* Card header */}
+              <div className="prescription-record-header">
+                <div className="prescription-record-title">
+                  <div className="prescription-document-icon">
+                    <FileText size={23} />
+                  </div>
+
+                  <div>
+                    <h5>Medical Prescription</h5>
+                    <span>
+                      {prescription.appointment?.appointmentDate
+                        ? formatDate(
+                            prescription.appointment.appointmentDate
+                          )
+                        : 'Appointment date not available'}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="prescription-record-badge">
+                  <CheckCircle size={14} />
+                  Issued
+                </span>
+              </div>
+
+              {/* Doctor details */}
+              <div className="prescription-doctor-section">
+                <div className="prescription-doctor-avatar">
+                  <Stethoscope size={21} />
+                </div>
+
+                <div>
+                  <small>Prescribed by</small>
+                  <h6>
+                    Dr. {prescription.doctor?.user?.name || 'Doctor'}
+                  </h6>
+                </div>
+              </div>
+
+              {/* Medicines */}
+              <div className="prescription-medicine-section">
+                <div className="prescription-section-heading">
+                  <Pill size={19} />
+                  <h6>Prescribed Medicines</h6>
+                  <span>
+                    {prescription.medicines?.length || 0} item(s)
+                  </span>
+                </div>
+
+                {prescription.medicines?.length > 0 ? (
+                  <div className="prescription-medicine-list">
+                    {prescription.medicines.map((medicine, index) => (
+                      <div
+                        className="prescription-medicine-item"
+                        key={index}
+                      >
+                        <div className="medicine-number">
+                          {index + 1}
+                        </div>
+
+                        <div className="medicine-information">
+                          <h6>{medicine.name || 'Medicine'}</h6>
+                          <p>
+                            {medicine.dosage || 'Dosage not specified'}
+                          </p>
+                        </div>
+
+                        <Pill
+                          size={19}
+                          className="medicine-item-icon"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted small mb-0">
+                    No medicines listed in this prescription.
+                  </p>
+                )}
+              </div>
+
+              {/* Doctor's notes */}
+              <div className="prescription-notes-section">
+                <div className="prescription-section-heading">
+                  <ClipboardList size={19} />
+                  <h6>Doctor's Instructions</h6>
+                </div>
+
+                <p>
+                  {prescription.notes || 'No additional instructions provided.'}
+                </p>
+              </div>
+
+              {/* Follow-up */}
+              <div className="prescription-followup">
+                <div className="prescription-followup-icon">
+                  <CalendarClock size={20} />
+                </div>
+
+                <div>
+                  <small>Follow-up Date</small>
+                  <h6>
+                    {prescription.followUpDate
+                      ? formatDate(prescription.followUpDate)
+                      : 'Not specified'}
+                  </h6>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
   // Find doctors view
   const renderFindDoctors = () => (
     <>
