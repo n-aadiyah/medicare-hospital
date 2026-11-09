@@ -10,6 +10,7 @@ const isValidEmail = (email) =>
 const sendError = (res, status, message) =>
   res.status(status).json({ success: false, message });
 
+
 // CREATE DOCTOR
 const createDoctor = async (req, res) => {
   let session;
@@ -25,6 +26,7 @@ const createDoctor = async (req, res) => {
       experience,
       bio,
       consultationFee,
+      profileImage,
     } = req.body || {};
 
     // Required fields
@@ -104,6 +106,14 @@ const createDoctor = async (req, res) => {
       return sendError(res, 400, "Bio must be a string.");
     }
 
+    // Validate doctor profile image URL
+    if (profileImage !== undefined && typeof profileImage !== "string") {
+      return sendError(res, 400, "Profile image must be a URL string.");
+    }
+
+    const normalizedProfileImage =
+      typeof profileImage === "string" ? profileImage.trim() : "";
+
     if (!mongoose.isValidObjectId(specialization)) {
       return sendError(res, 400, "Invalid specialization ID.");
     }
@@ -142,6 +152,7 @@ const createDoctor = async (req, res) => {
             email: normalizedEmail,
             password,
             phone: phone ? phone.trim() : "",
+            profileImage: normalizedProfileImage,
             role: "doctor",
             isEmailVerified: true,
             isActive: true,
@@ -186,6 +197,7 @@ const createDoctor = async (req, res) => {
   }
 };
 
+
 // GET ALL DOCTORS (ADMIN)
 const getAllDoctors = async (req, res) => {
   try {
@@ -213,6 +225,7 @@ const getAllDoctors = async (req, res) => {
     return sendError(res, 500, "Server error while fetching doctors.");
   }
 };
+
 
 // GET PUBLIC DOCTORS (PATIENT BROWSING)
 const getPublicDoctors = async (req, res) => {
@@ -257,6 +270,7 @@ const getPublicDoctors = async (req, res) => {
   }
 };
 
+
 // GET DOCTOR BY ID (ADMIN)
 const getDoctorById = async (req, res) => {
   try {
@@ -294,11 +308,13 @@ const getDoctorById = async (req, res) => {
     return sendError(res, 500, "Server error while fetching doctor.");
   }
 };
+
+
 // GET LOGGED-IN DOCTOR'S OWN PROFILE
 const getMyDoctorProfile = async (req, res) => {
   try {
     const doctor = await Doctor.findOne({
-      user: req.user._id
+      user: req.user._id,
     })
       .populate("user", "name email phone profileImage")
       .populate("specialization", "name");
@@ -306,7 +322,7 @@ const getMyDoctorProfile = async (req, res) => {
     if (!doctor || !doctor.user) {
       return res.status(404).json({
         success: false,
-        message: "Doctor profile not found."
+        message: "Doctor profile not found.",
       });
     }
 
@@ -320,18 +336,20 @@ const getMyDoctorProfile = async (req, res) => {
         bio: doctor.bio || "",
         specialization: doctor.specialization?.name || "",
         experience: doctor.experience,
-        consultationFee: doctor.consultationFee
-      }
+        consultationFee: doctor.consultationFee,
+      },
     });
   } catch (error) {
     console.error("Get own doctor profile error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch doctor profile."
+      message: "Failed to fetch doctor profile.",
     });
   }
 };
+
+
 // UPDATE DOCTOR (ADMIN)
 const updateDoctor = async (req, res) => {
   let session;
@@ -352,6 +370,7 @@ const updateDoctor = async (req, res) => {
       experience,
       bio,
       consultationFee,
+      profileImage,
     } = req.body || {};
 
     const doctor = await Doctor.findById(id);
@@ -406,6 +425,15 @@ const updateDoctor = async (req, res) => {
       }
 
       user.phone = phone.trim();
+    }
+
+    // Save or clear doctor profile image URL
+    if (profileImage !== undefined) {
+      if (typeof profileImage !== "string") {
+        return sendError(res, 400, "Profile image must be a URL string.");
+      }
+
+      user.profileImage = profileImage.trim();
     }
 
     // Validate and prepare Doctor fields.
@@ -524,6 +552,7 @@ const updateDoctor = async (req, res) => {
   }
 };
 
+
 // DEACTIVATE DOCTOR (ADMIN)
 const deactivateDoctor = async (req, res) => {
   let session;
@@ -583,6 +612,8 @@ const deactivateDoctor = async (req, res) => {
     }
   }
 };
+
+
 // DOCTOR UPDATES OWN PROFILE
 const updateMyDoctorProfile = async (req, res) => {
   try {
@@ -613,6 +644,7 @@ const updateMyDoctorProfile = async (req, res) => {
           message: "Name is required",
         });
       }
+
       user.name = name.trim();
     }
 
@@ -622,6 +654,7 @@ const updateMyDoctorProfile = async (req, res) => {
           message: "Invalid phone number",
         });
       }
+
       user.phone = phone.trim();
     }
 
@@ -631,6 +664,7 @@ const updateMyDoctorProfile = async (req, res) => {
           message: "Profile image must be a URL string",
         });
       }
+
       user.profileImage = profileImage.trim();
     }
 
@@ -640,6 +674,7 @@ const updateMyDoctorProfile = async (req, res) => {
           message: "Bio must be a string",
         });
       }
+
       doctor.bio = bio.trim();
     }
 
@@ -657,11 +692,13 @@ const updateMyDoctorProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update own doctor profile error:", error);
+
     return res.status(500).json({
       message: "Failed to update profile",
     });
   }
 };
+
 
 module.exports = {
   createDoctor,
