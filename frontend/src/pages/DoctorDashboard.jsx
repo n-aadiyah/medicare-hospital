@@ -49,7 +49,8 @@ const [profile, setProfile] = useState({
   profileImage: '',
   bio: ''
 });
-
+const [imageUploading, setImageUploading] = useState(false);
+const [imageError, setImageError] = useState('');
 const [profileLoading, setProfileLoading] = useState(false);
 const [profileSaving, setProfileSaving] = useState(false);
 const [profileMessage, setProfileMessage] = useState('');
@@ -243,6 +244,59 @@ const handleProfileChange = (field, value) => {
     ...prev,
     [field]: value
   }));
+};
+const handleDoctorImageUpload = async (e) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  // Validate image type
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    setImageError('Please select a JPG, PNG, or WEBP image.');
+    return;
+  }
+
+  // Maximum file size: 2MB
+  if (file.size > 2 * 1024 * 1024) {
+    setImageError('Image size should not exceed 2MB.');
+    return;
+  }
+
+  setImageError('');
+  setImageUploading(true);
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append(
+      'upload_preset',
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+    );
+
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Image upload failed.');
+    }
+
+    handleProfileChange('profileImage', data.secure_url);
+    setImageError('');
+  } catch (error) {
+    setImageError(error.message || 'Unable to upload image.');
+  } finally {
+    setImageUploading(false);
+    e.target.value = '';
+  }
 };
 
 const saveDoctorProfile = async () => {
@@ -991,18 +1045,33 @@ case 'Prescriptions': {
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Profile Image URL</label>
-              <input
-                className="form-control"
-                type="url"
-                placeholder="https://example.com/photo.jpg"
-                value={profile.profileImage}
-                onChange={e =>
-                  handleProfileChange('profileImage', e.target.value)
-                }
-              />
-            </div>
+           <div className="mb-3">
+  <label className="form-label">Profile Photo</label>
+
+  <input
+    type="file"
+    className="form-control"
+    accept="image/png,image/jpeg,image/webp"
+    onChange={handleDoctorImageUpload}
+    disabled={imageUploading}
+  />
+
+  <small className="text-muted">
+    Upload JPG, PNG, or WEBP (maximum 2MB).
+  </small>
+
+  {imageUploading && (
+    <p className="text-primary mt-2">
+      Uploading image...
+    </p>
+  )}
+
+  {imageError && (
+    <div className="text-danger mt-2">
+      {imageError}
+    </div>
+  )}
+</div>
 
             <div className="mb-4">
               <label className="form-label">Professional Bio</label>
