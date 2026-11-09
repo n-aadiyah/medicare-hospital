@@ -1,0 +1,336 @@
+
+.medicare-home {
+  color: #243746;
+  overflow: hidden;
+  background: #fff;
+}
+
+.medicare-navbar {
+  background: #fff;
+  padding: 17px 0;
+  box-shadow: 0 2px 15px rgba(20, 50, 70, .06);
+}
+
+.medicare-brand {
+  color: #116d7c;
+  font-size: 25px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-icon { display: flex; }
+.brand-dot { color: #35b6aa; }
+.medicare-navbar .nav-link {
+  color: #526574;
+  font-weight: 500;
+}
+.medicare-navbar .nav-link:hover,
+.medicare-navbar .nav-link.active { color: #168b91; }
+
+.btn-medicare {
+  background: #147d89;
+  border: 1px solid #147d89;
+  color: #fff;
+  border-radius: 8px;
+  padding: 11px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.btn-medicare:hover {
+  background: #105f6b;
+  color: #fff;
+}
+
+.btn-outline-medicare {
+  border: 1px solid #147d89;
+  color: #147d89;
+  border-radius: 8px;
+  padding: 11px 20px;
+}
+.btn-outline-medicare:hover {
+  background: #147d89;
+  color: #fff;
+}
+
+.hero-section {
+  padding: 85px 0 95px;
+  background: linear-gradient(120deg, #f0faf9, #f7fbff);
+}
+
+.hero-label,
+.section-label {
+  color: #168b91;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-section h1 {
+  font-size: clamp(38px, 5vw, 59px);
+  line-height: 1.15;
+  font-weight: 800;
+  color: #183d4c;
+  margin: 23px 0;
+}
+
+.hero-section h1 span { color: #168b91; }
+
+.hero-description,
+.section-description {
+  color: #6d7e88;
+  line-height: 1.8;
+  font-size: 16px;
+  max-width: 570px;
+}
+
+.hero-image-wrapper {
+  position: relative;
+  padding: 12px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+  border-radius: 25px;
+  box-shadow: 0 20px 50px rgba(20, 70, 80, .14);
+}
+
+.hero-floating-card {
+  position: absolute;
+  bottom: 35px;
+  left: -15px;
+  background: white;
+  padding: 16px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  box-shadow: 0 10px 35px rgba(20, 50, 70, .12);
+}
+
+.floating-icon {
+  background: #e5f6f4;
+  color: #168b91;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.hero-floating-card strong { color: #183d4c; }
+.hero-floating-card p { margin: 4px 0 0; color: #82919a; font-size: 12px; }
+
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.hero-trust div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #526d78;
+  font-size: 13px;
+}
+
+.hero-trust svg { color: #168b91; }
+
+.highlights-section {
+  padding: 25px 0;
+  background: #fff;
+}
+
+.highlight-card {
+  padding: 22px 12px;
+  text-align: center;
+  height: 100%;
+}
+
+.highlight-card svg { color: #168b91; margin-bottom: 13px; }
+.highlight-card h5 { font-size: 16px; font-weight: 700; }
+.highlight-card p { font-size: 12px; color: #82919a; margin: 0; }
+
+.section-padding { padding: 85px 0; }
+
+.section-heading {
+  color: #183d4c;
+  font-weight: 800;
+  font-size: clamp(28px, 3.5vw, 39px);
+  margin: 15px 0;
+}
+
+.text-medicare-link {
+  color: #168b91;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-card {
+  background: linear-gradient(135deg, #e8f7f5, #edf5fc);
+  border-radius: 22px;
+  padding: 50px;
+  min-height: 230px;
+}
+
+.about-card svg { color: #168b91; }
+.about-card h3 { color: #183d4c; font-weight: 750; margin-top: 20px; }
+.about-card p { color: #6d7e88; line-height: 1.7; }
+
+.bg-light-medicare { background: #f6fafb; }
+.section-intro { max-width: 700px; margin: auto; }
+
+.specialty-card,
+.doctor-card,
+.why-card {
+  background: #fff;
+  border: 1px solid #e9eff1;
+  border-radius: 15px;
+  height: 100%;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.specialty-card { padding: 25px 20px; }
+.specialty-card:hover,
+.doctor-card:hover,
+.why-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(20, 70, 80, .09);
+}
+
+.specialty-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 13px;
+  background: #e6f6f4;
+  color: #168b91;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+}
+
+.specialty-card h5,
+.doctor-details h5 {
+  font-weight: 750;
+  color: #183d4c;
+}
+
+.specialty-card p,
+.doctor-details p {
+  color: #83919a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.specialty-card a,
+.doctor-link {
+  color: #168b91;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.doctor-card { overflow: hidden; }
+.doctor-photo {
+  height: 210px;
+  background: #e9f5f5;
+  color: #168b91;
+  display: grid;
+  place-items: center;
+}
+
+.doctor-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-details { padding: 20px; }
+.doctor-details span { color: #168b91; font-size: 13px; }
+.doctor-details p { margin-top: 12px; }
+
+.why-section { background: #f6fafb; }
+
+.why-card { padding: 30px; text-align: center; }
+.why-card svg { color: #168b91; margin-bottom: 18px; }
+.why-card h5 { color: #183d4c; font-weight: 750; }
+.why-card p { color: #83919a; font-size: 14px; line-height: 1.7; }
+
+.cta-section {
+  padding: 70px 15px;
+  background: linear-gradient(120deg, #126b7b, #168f91);
+  color: #fff;
+}
+
+.cta-section h2 { font-size: 36px; font-weight: 800; }
+.cta-section p { color: #e0f3f1; margin: 15px 0 25px; }
+
+.cta-section .btn {
+  color: #126b7b;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.medicare-footer {
+  background: #153744;
+  color: #d7e5e9;
+  padding: 60px 0 20px;
+}
+
+.footer-brand {
+  color: #fff;
+  font-size: 25px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.footer-brand svg { color: #4dc1b3; }
+.medicare-footer p { color: #b6c9ce; line-height: 1.8; max-width: 390px; }
+.medicare-footer h6 { color: #fff; font-weight: 750; margin-bottom: 20px; }
+.medicare-footer a:not(.footer-brand) {
+  color: #b6c9ce;
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.medicare-footer a:hover { color: #61d2c3; }
+
+.footer-bottom {
+  border-top: 1px solid #34535d;
+  margin-top: 35px;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #9db4bb;
+}
+
+@media (max-width: 991px) {
+  .hero-section { padding: 60px 0; }
+  .hero-image { height: 370px; }
+  .hero-floating-card { left: 10px; }
+}
+
+@media (max-width: 576px) {
+  .section-padding { padding: 60px 0; }
+  .hero-section h1 { font-size: 38px; }
+  .hero-image { height: 290px; }
+  .hero-floating-card { bottom: 20px; }
+  .about-card { padding: 30px; }
+  .cta-section h2 { font-size: 28px; }
+  .medicare-navbar .btn { padding: 9px 12px; font-size: 13px; }
+}

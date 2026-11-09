@@ -1,10 +1,13 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+
+import Home from './pages/Home';
 import Login from './pages/Login';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+
 import './App.css';
 
 function ProtectedRoute({ allowedRoles, children }) {
@@ -13,54 +16,48 @@ function ProtectedRoute({ allowedRoles, children }) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    if (user.role === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    if (user.role === 'doctor') {
+      return <Navigate to="/doctor/dashboard" replace />;
+    }
+
+    return <Navigate to="/patient/dashboard" replace />;
   }
 
   return children;
 }
 
-function DashboardPlaceholder({ title }) {
-  const { user, logout } = useAuth();
-
-  return (
-    <div className="container py-5">
-      <div className="card p-4">
-        <h2>{title}</h2>
-        <p>Welcome, {user?.name}!</p>
-        <button
-          className="btn btn-primary-custom"
-          onClick={logout}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function HomeRedirect() {
+function App() {
   const { user } = useAuth();
 
-  if (!user) return <Navigate to="/login" replace />;
-
-  if (user.role === 'admin') {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-
-  if (user.role === 'doctor') {
-    return <Navigate to="/doctor/dashboard" replace />;
-  }
-
-  return <Navigate to="/patient/dashboard" replace />;
-}
-
-function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomeRedirect />} />
-        <Route path="/login" element={<Login />} />
+        {/* Public homepage */}
+        <Route path="/" element={<Home />} />
 
+        {/* Login */}
+        <Route
+          path="/login"
+          element={
+            user ? (
+              user.role === 'admin' ? (
+                <Navigate to="/admin/dashboard" replace />
+              ) : user.role === 'doctor' ? (
+                <Navigate to="/doctor/dashboard" replace />
+              ) : (
+                <Navigate to="/patient/dashboard" replace />
+              )
+            ) : (
+              <Login />
+            )
+          }
+        />
+
+        {/* Patient dashboard */}
         <Route
           path="/patient/dashboard"
           element={
@@ -70,6 +67,7 @@ function App() {
           }
         />
 
+        {/* Doctor dashboard */}
         <Route
           path="/doctor/dashboard"
           element={
@@ -79,15 +77,17 @@ function App() {
           }
         />
 
-       <Route
-  path="/admin/dashboard"
-  element={
-    <ProtectedRoute allowedRoles={['admin']}>
-      <AdminDashboard />
-    </ProtectedRoute>
-  }
-/>
+        {/* Admin dashboard */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
